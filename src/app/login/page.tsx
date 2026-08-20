@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/Toast';
+import { LoginShowcase } from '@/components/LoginShowcase';
 
 function LoginInner() {
   const router = useRouter();
@@ -41,8 +42,26 @@ function LoginInner() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-navy to-brand-navy2 p-4">
-      <div className="w-full max-w-md">
+    <div className="grid min-h-screen bg-gradient-to-br from-brand-navy to-brand-navy2 lg:grid-cols-2">
+      {/* Desktop-only animated showcase */}
+      <div className="hidden flex-col justify-center gap-10 p-12 lg:flex">
+        <div>
+          <div className="text-3xl font-extrabold leading-tight text-white">
+            Compliant AI calling,
+            <br />
+            built for Infinity Web &amp; Apps.
+          </div>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/60">
+            Upload leads, run a sequential AI voice campaign, and transfer interested
+            prospects to you — with compliance built into the core.
+          </p>
+        </div>
+        <LoginShowcase />
+      </div>
+
+      {/* Sign-in form column */}
+      <div className="flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-royal text-xl font-black text-white">
             ∞
@@ -101,9 +120,10 @@ function LoginInner() {
           </button>
         </div>
 
-        <p className="mt-4 text-center text-xs text-white/50">
-          Passwords are hashed by Supabase Auth. Never stored in plaintext.
-        </p>
+          <p className="mt-4 text-center text-xs text-white/50">
+            Passwords are hashed by Supabase Auth. Never stored in plaintext.
+          </p>
+        </div>
       </div>
     </div>
   );
