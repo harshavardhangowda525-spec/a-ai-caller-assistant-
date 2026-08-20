@@ -1,6 +1,14 @@
 import { getConfig, configIssues } from '@/lib/config';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
+import {
+  callsPerDay,
+  getDashboardStats,
+  listCalls,
+  listCampaigns,
+  listLeads,
+  getSettings,
+} from '@/server/queries';
 
 /**
  * Setup diagnostics. Lives OUTSIDE the (app) layout so it renders even if the
@@ -69,6 +77,17 @@ export default async function DiagnosticsPage() {
     }
   }
 
+  // Run the ACTUAL dashboard queries (request client + RLS) to reproduce the
+  // real crash and show its message.
+  const queryChecks: Record<string, string> = {
+    getDashboardStats: await check(() => getDashboardStats()),
+    callsPerDay: await check(() => callsPerDay(7)),
+    listLeads: await check(() => listLeads(5)),
+    listCampaigns: await check(() => listCampaigns()),
+    listCalls: await check(() => listCalls(5)),
+    getSettings: await check(() => getSettings()),
+  };
+
   const Row = ({ k, v }: { k: string; v: string | boolean }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '6px 0', borderBottom: '1px solid #e4e9f2' }}>
       <code style={{ color: '#0b1e3f' }}>{k}</code>
@@ -104,6 +123,9 @@ export default async function DiagnosticsPage() {
 
       <h2 style={{ color: '#0b1e3f', marginTop: 24 }}>Admin user row</h2>
       <Row k="public.users has your account" v={userRowInfo} />
+
+      <h2 style={{ color: '#0b1e3f', marginTop: 24 }}>Dashboard queries (must all be “ok”)</h2>
+      {Object.entries(queryChecks).map(([k, v]) => <Row key={k} k={k} v={v} />)}
 
       <p style={{ color: '#5b6b86', marginTop: 24, fontSize: 13 }}>
         If tables show errors like “relation does not exist”, run the 3 SQL files in
