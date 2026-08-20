@@ -196,6 +196,12 @@ from the **owner-editable approved information** (AI Script page) plus
 **immutable safety rails** that cannot be edited away. Swap in any model by
 implementing the `AiProvider` interface (`src/ai`).
 
+**For a fully talking AI voice call** (real TTS/STT over the phone), see
+[`docs/GOING_LIVE.md`](./docs/GOING_LIVE.md). The vendor-neutral conversation
+engine (`VoiceConversation`) and transport bridge (`runVoiceBridge`) are built
+and tested; only a provider-specific media-streaming adapter plus TTS/STT
+credentials remain.
+
 ## Caller ID & the no-spoofing rule
 
 `OUTBOUND_CALLER_ID` is validated in two stages:

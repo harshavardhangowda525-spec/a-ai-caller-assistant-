@@ -13,7 +13,9 @@ import {
 } from './script';
 import type { AiProvider, AiTurnInput, AiTurnResult } from './provider';
 
-const YES = /\b(yes|yeah|yep|sure|ok(ay)?|interested|go ahead|please do|transfer me|sounds good)\b/i;
+// Note: bare "interested" is intentionally excluded so "not interested" is not
+// misread as agreement — that phrase is handled by the NO branch below.
+const YES = /\b(yes|yeah|yep|sure|ok(ay)?|go ahead|please do|transfer me|sounds good|i'?m interested|i am interested)\b/i;
 const NO = /\b(no|not interested|nope|don'?t|do not|leave me)\b/i;
 const DNC = /\b(stop calling|do not call|remove me|never call|unsubscribe|no more calls)\b/i;
 const CALLBACK = /\b(call( me)? (back|later)|another time|busy right now|call tomorrow)\b/i;
