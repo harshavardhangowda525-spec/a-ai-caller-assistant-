@@ -7,7 +7,7 @@ import { createServerClient } from '@supabase/ssr';
  * through so the in-app setup screen can render (rather than a redirect loop).
  */
 
-const PUBLIC_PATHS = ['/login', '/auth', '/setup'];
+const PUBLIC_PATHS = ['/login', '/auth', '/setup', '/diagnostics'];
 
 export async function middleware(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;

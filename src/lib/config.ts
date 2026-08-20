@@ -44,17 +44,32 @@ export type AiProviderName = z.infer<typeof AiProviderEnum>;
 
 let cached: ReturnType<typeof buildConfig> | null = null;
 
+/** Config issues collected without throwing, surfaced on the diagnostics page. */
+export let configIssues: string[] = [];
+
 function buildConfig() {
-  const parsed = envSchema.safeParse(process.env);
-  if (!parsed.success) {
-    // Fail loud but do not print raw secret values.
-    throw new Error(
-      `Invalid environment configuration: ${parsed.error.issues
-        .map((i) => i.path.join('.'))
-        .join(', ')}`,
-    );
+  // Treat empty / whitespace-only env values as "unset" so schema defaults
+  // apply. On hosts like Vercel it is easy to create a variable with a blank
+  // value; without this an empty TELEPHONY_PROVIDER would fail enum validation
+  // and crash every page.
+  const cleaned: Record<string, string> = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (typeof v === 'string' && v.trim() !== '') cleaned[k] = v.trim();
   }
-  const env = parsed.data;
+
+  let parsed = envSchema.safeParse(cleaned);
+  configIssues = [];
+  if (!parsed.success) {
+    // Never crash the app on a misconfigured optional value. Record the issue,
+    // drop the offending keys, and re-parse so valid values still apply.
+    configIssues = parsed.error.issues.map(
+      (i) => `${i.path.join('.') || '(root)'}: ${i.message}`,
+    );
+    const badKeys = new Set(parsed.error.issues.map((i) => String(i.path[0])));
+    for (const key of badKeys) delete cleaned[key];
+    parsed = envSchema.safeParse(cleaned);
+  }
+  const env = parsed.success ? parsed.data : envSchema.parse({});
 
   return {
     appBaseUrl: env.APP_BASE_URL,
