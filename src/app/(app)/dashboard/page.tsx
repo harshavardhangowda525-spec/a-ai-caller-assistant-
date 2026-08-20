@@ -1,5 +1,5 @@
 import { StatCard } from '@/components/ui';
-import { CallsPerDayChart, DonutChart, ChartLegend, CHART_COLORS } from '@/components/Charts';
+import { CallsPerDayChart, DonutChart, ChartLegend, CHART_COLORS } from '@/components/ChartsClient';
 import { ComplianceBanner } from '@/components/ComplianceBanner';
 import { callsPerDay, getDashboardStats } from '@/server/queries';
 
