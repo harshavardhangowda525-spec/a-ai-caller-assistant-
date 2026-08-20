@@ -126,6 +126,7 @@ export class MemoryQueueRepository implements QueueRepository {
         status: CallStatus.Queued,
         ai_state: 'idle',
         transfer_status: 'none',
+        current_stage: null,
         started_at: this.ts(),
         answered_at: null,
         ended_at: null,

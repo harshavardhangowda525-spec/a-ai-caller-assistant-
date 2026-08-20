@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: #f4f6fb;
+  color: #0b1220;
+  font-family: Inter, system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-card shadow-card border border-brand-grayMid/60;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-royal text-white hover:bg-brand-royalLight shadow-sm;
+  }
+  .btn-ghost {
+    @apply btn bg-brand-gray text-brand-navy hover:bg-brand-grayMid;
+  }
+  .btn-danger {
+    @apply btn bg-status-danger text-white hover:opacity-90;
+  }
+  .input {
+    @apply w-full rounded-lg border border-brand-grayMid bg-white px-3 py-2 text-sm outline-none focus:border-brand-royal focus:ring-2 focus:ring-brand-royal/20;
+  }
+  .label {
+    @apply block text-xs font-semibold uppercase tracking-wide text-brand-grayText mb-1.5;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+}
+
+/* Thin, unobtrusive scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cdd6e6;
+  border-radius: 8px;
+}

@@ -151,6 +151,7 @@ export interface CallRecord {
   status: CallStatus;
   ai_state: AiState;
   transfer_status: TransferStatus;
+  current_stage: string | null;
   started_at: string | null;
   answered_at: string | null;
   ended_at: string | null;

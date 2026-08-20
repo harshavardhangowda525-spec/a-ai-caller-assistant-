@@ -49,11 +49,19 @@ describe('transfer coordinator', () => {
 
   it('never spoofs — blocks transfer when caller ID is not verified', async () => {
     // A provider stub that reports the caller ID is NOT verified.
-    const unverifiedProvider: TelephonyProvider = {
-      ...new MockTelephonyProvider(),
-      name: 'stub',
-      validateCallerId: async () => ({ ok: true, verified: false, reason: 'not_registered' }),
-    } as TelephonyProvider;
+    const base = new MockTelephonyProvider();
+    const unverifiedProvider: TelephonyProvider = Object.assign(
+      Object.create(Object.getPrototypeOf(base)),
+      base,
+      {
+        name: 'stub',
+        validateCallerId: async () => ({
+          ok: true,
+          verified: false,
+          reason: 'not_registered',
+        }),
+      },
+    );
 
     const out = await performTransfer(unverifiedProvider, {
       providerCallId: 'p1',
