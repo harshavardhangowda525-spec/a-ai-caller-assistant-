@@ -1,162 +1,159 @@
-import { getConfig, validateConfiguredCallerId } from '@/lib/config';
-import { callsPerDay, getDashboardStats } from '@/server/queries';
+'use client';
 
-/**
- * Dashboard — intentionally 100% server-rendered with no client-component or
- * charting-library dependencies. Charts are drawn with plain CSS (flas bars +
- * a conic-gradient donut) so the page can never fail during SSR.
- */
-export const dynamic = 'force-dynamic';
+import Link from 'next/link';
+import {
+  IndianRupee, Coffee, CalendarClock, Clock3, TrendingUp, PiggyBank, ArrowUpRight,
+} from 'lucide-react';
+import { useStore } from '@/lib/store';
+import {
+  dashboardKpis, revenueSeries, categorySales, paymentBreakdown, monthlyPerformance,
+  orderTotal, customerName, eventProfit,
+} from '@/lib/selectors';
+import { inr } from '@/lib/money';
+import { fmtDate, today } from '@/lib/format';
+import { Glass, PageTitle, Chip } from '@/components/ui';
+import { KpiCard } from '@/components/Metrics';
+import { RevenueArea, BarSeries, Donut, LineSeries } from '@/components/Charts';
+import { EVENT_STATUS } from '@/lib/status';
 
-function Stat({ label, value, accent }: { label: string; value: number; accent?: string }) {
+export default function DashboardPage() {
+  const { data, ready } = useStore();
+  const k = dashboardKpis(data);
+  const rev = revenueSeries(data);
+  const cats = categorySales(data);
+  const pays = paymentBreakdown(data);
+  const monthly = monthlyPerformance(data);
+  const t = today();
+
+  const recentOrders = [...data.orders]
+    .filter((o) => o.status === 'paid')
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 5);
+
+  const upcoming = [...data.events]
+    .filter((e) => e.date >= t && e.status !== 'cancelled')
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 4);
+
+  const lowStock = data.products.filter((p) => p.stock <= p.minStock).slice(0, 5);
+
   return (
-    <div className="card p-5">
-      <div className="text-xs font-semibold uppercase tracking-wide text-brand-grayText">{label}</div>
-      <div className="mt-2 text-3xl font-extrabold" style={{ color: accent ?? '#0b1e3f' }}>
-        {value}
+    <div>
+      <PageTitle
+        title={`Welcome back 👋`}
+        subtitle={ready ? `Here's how ${data.settings.businessName} is doing today` : 'Loading your workspace…'}
+      />
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <KpiCard label="Today's Sales" value={k.todaySales} format={(n) => inr(n)} trend={12.5} icon={<IndianRupee size={18} />} accent="brand" delay={0} />
+        <KpiCard label="Café Orders" value={k.cafeOrdersToday} format={(n) => String(Math.round(n))} trend={8.2} icon={<Coffee size={18} />} accent="info" delay={60} />
+        <KpiCard label="Upcoming Events" value={k.upcomingEvents} format={(n) => String(Math.round(n))} trend={5} icon={<CalendarClock size={18} />} accent="accent" delay={120} />
+        <KpiCard label="Pending Payments" value={k.pendingPayments} format={(n) => inr(n)} trend={-3.4} icon={<Clock3 size={18} />} accent="warn" delay={180} />
+        <KpiCard label="Total Revenue" value={k.totalRevenue} format={(n) => inr(n)} trend={18.9} icon={<TrendingUp size={18} />} accent="good" delay={240} />
+        <KpiCard label="Event Profit" value={k.eventProfit} format={(n) => inr(n)} trend={14.1} icon={<PiggyBank size={18} />} accent="accent" delay={300} />
+      </div>
+
+      {/* Charts */}
+      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+        <Glass className="p-5 xl:col-span-2 animate-fade-up">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">Revenue overview</h3>
+              <p className="text-xs text-ink-faint">Café vs Events · last 7 days</p>
+            </div>
+            <Chip tone="good">This week</Chip>
+          </div>
+          <RevenueArea data={rev} />
+        </Glass>
+
+        <Glass className="p-5 animate-fade-up">
+          <h3 className="mb-1 font-semibold">Payment breakdown</h3>
+          <p className="mb-2 text-xs text-ink-faint">By method</p>
+          {pays.length ? <Donut data={pays} /> : <Empty />}
+        </Glass>
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
+        <Glass className="p-5 animate-fade-up">
+          <h3 className="mb-1 font-semibold">Category sales</h3>
+          <p className="mb-2 text-xs text-ink-faint">Café revenue by category</p>
+          {cats.length ? <BarSeries data={cats} color="multi" /> : <Empty />}
+        </Glass>
+
+        <Glass className="p-5 xl:col-span-2 animate-fade-up">
+          <h3 className="mb-1 font-semibold">Monthly performance</h3>
+          <p className="mb-2 text-xs text-ink-faint">Revenue &amp; profit trend</p>
+          <LineSeries data={monthly} />
+        </Glass>
+      </div>
+
+      {/* Lists */}
+      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <Glass className="p-5 animate-fade-up">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-semibold">Upcoming events</h3>
+            <Link href="/events" className="text-xs text-brand hover:underline">View all</Link>
+          </div>
+          <div className="space-y-2">
+            {upcoming.length ? upcoming.map((e) => (
+              <Link key={e.id} href={`/events?id=${e.id}`} className="flex items-center gap-3 rounded-xl glass-2 p-2.5 transition hover:brightness-105">
+                <div className="grid h-10 w-10 shrink-0 flex-col place-items-center rounded-xl bg-brand/12 text-brand">
+                  <span className="text-[10px] font-bold uppercase leading-none">{new Date(e.date).toLocaleDateString('en-IN', { month: 'short' })}</span>
+                  <span className="text-sm font-bold leading-none">{new Date(e.date).getDate()}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{e.name}</div>
+                  <div className="text-xs text-ink-faint">{e.type} · {e.guests} guests</div>
+                </div>
+                <Chip tone={EVENT_STATUS[e.status].tone}>{EVENT_STATUS[e.status].label}</Chip>
+              </Link>
+            )) : <Empty label="No upcoming events" />}
+          </div>
+        </Glass>
+
+        <Glass className="p-5 animate-fade-up">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-semibold">Recent café orders</h3>
+            <Link href="/orders" className="text-xs text-brand hover:underline">View all</Link>
+          </div>
+          <div className="space-y-2">
+            {recentOrders.length ? recentOrders.map((o) => (
+              <div key={o.id} className="flex items-center gap-3 rounded-xl glass-2 p-2.5">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-info/12 text-base">☕</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{o.number}</div>
+                  <div className="text-xs text-ink-faint">{customerName(data, o.customerId)} · {o.items.length} items</div>
+                </div>
+                <div className="text-sm font-semibold">{inr(orderTotal(o, data.settings))}</div>
+              </div>
+            )) : <Empty label="No orders yet" />}
+          </div>
+        </Glass>
+
+        <Glass className="p-5 animate-fade-up">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-semibold">Low stock</h3>
+            <Link href="/inventory" className="text-xs text-brand hover:underline">Inventory</Link>
+          </div>
+          <div className="space-y-2">
+            {lowStock.length ? lowStock.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-xl glass-2 p-2.5">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-warn/12 text-base">{p.image}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{p.name}</div>
+                  <div className="text-xs text-ink-faint">Min {p.minStock} · SKU {p.sku}</div>
+                </div>
+                <Chip tone={p.stock === 0 ? 'bad' : 'warn'}>{p.stock === 0 ? 'Out' : `${p.stock} left`}</Chip>
+              </div>
+            )) : <Empty label="Stock levels healthy" />}
+          </div>
+        </Glass>
       </div>
     </div>
   );
 }
 
-export default async function DashboardPage() {
-  const [stats, perDay] = await Promise.all([getDashboardStats(), callsPerDay(7)]);
-
-  const completed = stats.callsCompleted || 0;
-  const completionRate = stats.totalLeads > 0 ? Math.round((completed / stats.totalLeads) * 100) : 0;
-  const transferRate = completed > 0 ? Math.round((stats.transferred / completed) * 100) : 0;
-
-  const maxDay = Math.max(1, ...perDay.map((d) => d.count));
-  const interestTotal = stats.interested + stats.notInterested;
-  const interestedPct = interestTotal > 0 ? Math.round((stats.interested / interestTotal) * 100) : 0;
-
-  const cfg = getConfig();
-  const callerId = validateConfiguredCallerId();
-
-  return (
-    <div className="space-y-6">
-      {/* Compliance banner (inline, server-rendered) */}
-      <div className="card border-status-warn/40 bg-status-warn/5 p-4">
-        <div className="flex items-start gap-3 text-sm text-brand-navy">
-          <span className="text-lg">⚠️</span>
-          <div>
-            <b>Compliance responsibility.</b> You are responsible for ensuring every uploaded
-            contact is legally eligible for commercial calling and that your telephony
-            configuration complies with applicable Indian telecom requirements. This system does
-            not spoof caller ID or bypass spam controls.
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              <span className="badge bg-brand-grayMid text-brand-navy">
-                Provider: {cfg.telephony.provider.toUpperCase()}
-              </span>
-              <span
-                className={`badge ${callerId.ok ? 'bg-status-success/15 text-status-success' : 'bg-status-danger/15 text-status-danger'}`}
-              >
-                Caller ID: {callerId.ok ? 'configured' : 'not configured'}
-              </span>
-              {cfg.telephony.provider === 'mock' && (
-                <span className="badge bg-status-warn/15 text-status-warn">
-                  Live calling disabled (mock mode)
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-extrabold text-brand-navy">Dashboard</h2>
-        <p className="text-sm text-brand-grayText">Campaign performance at a glance.</p>
-      </div>
-
-      {/* Stat grid */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <Stat label="Total Leads" value={stats.totalLeads} />
-        <Stat label="Eligible Leads" value={stats.eligibleLeads} accent="#1e50e5" />
-        <Stat label="Calls Completed" value={stats.callsCompleted} />
-        <Stat label="Currently Calling" value={stats.currentlyCalling} accent="#2b8de0" />
-        <Stat label="Interested" value={stats.interested} accent="#1aa66b" />
-        <Stat label="Not Interested" value={stats.notInterested} accent="#e04848" />
-        <Stat label="Callbacks" value={stats.callbacks} accent="#e0a300" />
-        <Stat label="Transferred" value={stats.transferred} accent="#1e50e5" />
-        <Stat label="Failed Calls" value={stats.failed} accent="#e04848" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Calls per day — CSS bars */}
-        <div className="card p-5">
-          <h3 className="text-sm font-bold text-brand-navy">Calls per day (last 7 days)</h3>
-          <div className="mt-5 flex h-[180px] items-end justify-between gap-2">
-            {perDay.map((d) => (
-              <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
-                <div className="text-[11px] font-semibold text-brand-navy">{d.count}</div>
-                <div
-                  className="w-full rounded-t-md bg-brand-royal"
-                  style={{ height: `${Math.max(4, (d.count / maxDay) * 140)}px` }}
-                />
-                <div className="text-[10px] text-brand-grayText">{d.day}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Interested vs Not — conic-gradient donut */}
-        <div className="card p-5">
-          <h3 className="text-sm font-bold text-brand-navy">Interested vs Not Interested</h3>
-          <div className="mt-4 flex items-center gap-6">
-            <div
-              className="relative h-32 w-32 rounded-full"
-              style={{
-                background:
-                  interestTotal > 0
-                    ? `conic-gradient(#1aa66b 0% ${interestedPct}%, #e04848 ${interestedPct}% 100%)`
-                    : '#e4e9f2',
-              }}
-            >
-              <div className="absolute inset-4 flex items-center justify-center rounded-full bg-white text-sm font-bold text-brand-navy">
-                {interestTotal > 0 ? `${interestedPct}%` : '—'}
-              </div>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-status-success" /> Interested
-                <b className="text-brand-navy">{stats.interested}</b>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-status-danger" /> Not Interested
-                <b className="text-brand-navy">{stats.notInterested}</b>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Completion rate */}
-        <div className="card p-5">
-          <h3 className="text-sm font-bold text-brand-navy">Call completion rate</h3>
-          <div className="mt-6 flex items-end gap-4">
-            <div className="text-5xl font-extrabold text-brand-royal">{completionRate}%</div>
-            <div className="pb-2 text-sm text-brand-grayText">
-              {completed} of {stats.totalLeads} leads processed
-            </div>
-          </div>
-          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-brand-grayMid">
-            <div className="h-full rounded-full bg-brand-royal" style={{ width: `${completionRate}%` }} />
-          </div>
-        </div>
-
-        {/* Transfer rate */}
-        <div className="card p-5">
-          <h3 className="text-sm font-bold text-brand-navy">Transfer rate</h3>
-          <div className="mt-6 flex items-end gap-4">
-            <div className="text-5xl font-extrabold text-status-success">{transferRate}%</div>
-            <div className="pb-2 text-sm text-brand-grayText">
-              {stats.transferred} transfers of {completed} completed calls
-            </div>
-          </div>
-          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-brand-grayMid">
-            <div className="h-full rounded-full bg-status-success" style={{ width: `${transferRate}%` }} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function Empty({ label = 'No data' }: { label?: string }) {
+  return <div className="py-10 text-center text-sm text-ink-faint">{label}</div>;
 }

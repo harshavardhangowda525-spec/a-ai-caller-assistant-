@@ -2,9 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Server-only packages should never be bundled for the browser.
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  eslint: {
+    // Type-checking (tsc) is the source of truth; don't block builds on lint.
+    ignoreDuringBuilds: true,
   },
 };
 

@@ -1,57 +1,80 @@
 import type { Config } from 'tailwindcss';
 
-/**
- * Infinity Web & Apps brand palette.
- * Dark blue / royal blue / white / light gray, rounded cards, subtle shadows.
- */
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  darkMode: ['class', '[data-theme="dark"]'],
+  content: [
+    './src/app/**/*.{ts,tsx}',
+    './src/components/**/*.{ts,tsx}',
+    './src/lib/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
+        // Semantic tokens driven by CSS variables (theme-aware).
+        glass: {
+          bg: 'rgb(var(--glass-bg) / <alpha-value>)',
+          border: 'rgb(var(--glass-border) / <alpha-value>)',
+          hi: 'rgb(var(--glass-highlight) / <alpha-value>)',
+        },
+        ink: {
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          soft: 'rgb(var(--ink-soft) / <alpha-value>)',
+          faint: 'rgb(var(--ink-faint) / <alpha-value>)',
+        },
         brand: {
-          // Dark blue
-          navy: '#0b1e3f',
-          navy2: '#0f2650',
-          // Royal blue
-          royal: '#1e50e5',
-          royalLight: '#3b6ef0',
-          // Neutrals
-          ink: '#0b1220',
-          gray: '#f4f6fb',
-          grayMid: '#e4e9f2',
-          grayText: '#5b6b86',
+          DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
+          soft: 'rgb(var(--brand-soft) / <alpha-value>)',
+          accent: 'rgb(var(--accent) / <alpha-value>)',
         },
-        status: {
-          success: '#1aa66b',
-          warn: '#e0a300',
-          danger: '#e04848',
-          info: '#2b8de0',
-        },
+        good: 'rgb(var(--good) / <alpha-value>)',
+        warn: 'rgb(var(--warn) / <alpha-value>)',
+        bad: 'rgb(var(--bad) / <alpha-value>)',
+        info: 'rgb(var(--info) / <alpha-value>)',
       },
       borderRadius: {
-        card: '16px',
+        glass: '22px',
+        'glass-lg': '28px',
       },
       boxShadow: {
-        card: '0 1px 3px rgba(11, 30, 63, 0.06), 0 8px 24px rgba(11, 30, 63, 0.06)',
-        cardHover: '0 2px 6px rgba(11, 30, 63, 0.10), 0 16px 40px rgba(11, 30, 63, 0.10)',
+        glass: 'var(--shadow-glass)',
+        'glass-sm': 'var(--shadow-glass-sm)',
+        glow: '0 0 0 1px rgb(var(--brand) / 0.35), 0 8px 30px -8px rgb(var(--brand) / 0.55)',
+      },
+      backdropBlur: {
+        glass: '22px',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       keyframes: {
-        pulseDot: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.35' },
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        fadeIn: {
-          from: { opacity: '0', transform: 'translateY(4px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'count-in': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        float: {
+          '0%,100%': { transform: 'translate(0,0) scale(1)' },
+          '33%': { transform: 'translate(3%,-4%) scale(1.05)' },
+          '66%': { transform: 'translate(-3%,3%) scale(0.97)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       animation: {
-        pulseDot: 'pulseDot 1.4s ease-in-out infinite',
-        fadeIn: 'fadeIn 0.25s ease-out',
+        'fade-up': 'fade-up 0.5s cubic-bezier(0.22,1,0.36,1) both',
+        'scale-in': 'scale-in 0.28s cubic-bezier(0.22,1,0.36,1) both',
+        'count-in': 'count-in 0.6s cubic-bezier(0.22,1,0.36,1) both',
+        'float-slow': 'float 26s ease-in-out infinite',
+        'float-slower': 'float 38s ease-in-out infinite',
+        shimmer: 'shimmer 1.6s infinite',
       },
     },
   },

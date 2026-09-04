@@ -1,43 +1,31 @@
 {
-  "name": "infinity-ai-caller",
+  "name": "liquid-glass-cafe-events",
   "version": "1.0.0",
   "private": true,
-  "description": "Infinity AI Caller — compliant AI voice outbound calling platform for Infinity Web & Apps",
+  "description": "Liquid Glass — a premium café + event management billing & business platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "worker": "tsx src/queue/worker.ts",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.45.4",
-    "gsap": "^3.15.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.454.0",
     "next": "^14.2.35",
-    "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.12.7",
-    "server-only": "^0.0.1",
-    "zod": "^3.23.8"
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
-    "@types/papaparse": "^5.3.14",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.2",
-    "vitest": "^2.1.2"
+    "typescript": "^5.6.2"
   },
   "engines": {
     "node": ">=20"

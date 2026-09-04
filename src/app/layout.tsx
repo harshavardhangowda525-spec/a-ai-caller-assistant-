@@ -1,25 +1,38 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { ToastProvider } from '@/components/Toast';
 
 export const metadata: Metadata = {
-  title: 'Infinity AI Caller',
-  description: 'Compliant AI voice outbound calling for Infinity Web & Apps',
+  title: 'Liquid Glass — Café & Event OS',
+  description:
+    'A premium Liquid Glass business operating system for cafés and event companies — POS, billing, events, quotations, invoices, payments and reports.',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#2f54eb',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
+        {/* Set theme before paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('lg-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
+          }}
         />
       </head>
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <div className="lg-bg" aria-hidden>
+          <div className="lg-blob b1 animate-float-slow" />
+          <div className="lg-blob b2 animate-float-slower" />
+          <div className="lg-blob b3 animate-float-slow" />
+          <div className="lg-grain" />
+        </div>
+        {children}
       </body>
     </html>
   );
