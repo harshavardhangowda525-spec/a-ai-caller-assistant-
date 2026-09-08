@@ -1,44 +1,26 @@
-/**
- * Server Supabase client bound to the request cookies (for auth/session in
- * server components and route handlers). Uses the ANON key with the user's
- * session; RLS applies.
- */
-
-import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { config, supabaseConfigured } from '../config';
 
-export function createClient() {
+/** Server-side Supabase client bound to the request cookies.
+ *  Returns null when Supabase isn't configured so callers fall back to seed. */
+export function getServerSupabase() {
+  if (!supabaseConfigured) return null;
   const cookieStore = cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const anonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
-    throw new Error('Supabase server client is not configured.');
-  }
-
-  return createServerClient(url, anonKey, {
+  return createServerClient(config.supabaseUrl, config.supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+      setAll(all: { name: string; value: string; options?: Record<string, unknown> }[]) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options as never),
+          all.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
           );
         } catch {
-          // Called from a Server Component — safe to ignore; middleware refreshes.
+          // Called from a Server Component — safe to ignore.
         }
       },
     },
   });
-}
-
-/** True when Supabase env is present. Used to show a setup screen otherwise. */
-export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL) &&
-      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY),
-  );
 }
