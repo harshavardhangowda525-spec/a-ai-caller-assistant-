@@ -75,14 +75,12 @@
   /* real photo layer (loads over the gradient; falls back to gradient on error) */
   .photo .pglyph{z-index:0}
   .photo .ptag{z-index:3}
-  .photo img.pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
-    transition:opacity .9s ease;z-index:1}
-  .photo img.pimg.loaded{opacity:1}
+  .photo img.pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+    animation:imgfade .7s ease both}
+  @keyframes imgfade{from{opacity:0}to{opacity:1}}
   .pcard .top::after,.tcard .pic::after{z-index:2}
   .gcell .ov{z-index:2}.gcell .plus{z-index:3}
   .about-badge{z-index:2}
-  .hero-bg .pimg{opacity:.001}
-  .hero-bg .pimg.loaded{opacity:1}
 
   /* ---------- loader ---------- */
   #loader{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--bg);
@@ -840,21 +838,24 @@
       +"</svg>";
     return "data:image/svg+xml,"+encodeURIComponent(svg);
   }
-  // Real web photos (LoremFlickr → real Flickr gym imagery, keyword-based,
-  // stable via ?lock). If a photo fails to load, fall back to embedded SVG art.
-  window.__imgFallback=function(img){img.onerror=null;
-    img.src=scene(img.getAttribute('data-ic')||'dumbbell',+(img.getAttribute('data-seed')||1));
-    img.classList.add('loaded');};
+  // Images: show embedded SVG art IMMEDIATELY (always visible, no network),
+  // then silently upgrade to a real web photo (LoremFlickr → real Flickr gym
+  // imagery) if and when it loads. Guarantees images appear everywhere.
   function photoUrl(kw,seed,w,h){return 'https://loremflickr.com/'+(w||700)+'/'+(h||500)+'/'+kw+'?lock='+seed;}
   function imgTag(kw,seed,icon,alt,w,h){
-    return "<img class='pimg' alt='"+(alt||'').replace(/'/g,'')+"' data-ic='"+icon+"' data-seed='"+seed+
-      "' src='"+photoUrl(kw,seed,w,h)+"' onload=\"this.classList.add('loaded')\" onerror=\"window.__imgFallback(this)\">";
+    return "<img class='pimg' alt='"+(alt||'').replace(/'/g,'')+"' src=\""+scene(icon,seed)+
+      "\" data-photo=\""+photoUrl(kw,seed,w,h)+"\">";
+  }
+  function upgradePhotos(root){
+    (root||document).querySelectorAll('img.pimg[data-photo]').forEach(function(img){
+      var url=img.getAttribute('data-photo');img.removeAttribute('data-photo');if(!url)return;
+      var pre=new Image();
+      pre.onload=function(){img.src=url;};
+      pre.src=url;
+    });
   }
   function setPhoto(id,kw,seed,icon,w,h){var el=document.getElementById(id);if(!el)return;
-    el.setAttribute('data-ic',icon);el.setAttribute('data-seed',seed);
-    el.addEventListener('load',function(){el.classList.add('loaded');});
-    el.addEventListener('error',function(){window.__imgFallback(el);});
-    el.src=photoUrl(kw,seed,w,h);}
+    el.src=scene(icon,seed);el.setAttribute('data-photo',photoUrl(kw,seed,w,h));}
   setPhoto('hero-img','gym,fitness,workout,dark',11,'barbell',1600,900);
   setPhoto('about-img-el','gym,interior,fitness',22,'rack',900,1100);
 
@@ -915,6 +916,7 @@
       var lp=document.getElementById('lb-photo');
       lp.querySelectorAll('img').forEach(function(x){x.remove();});
       lp.insertAdjacentHTML('beforeend',imgTag(g[3],g[4],g[5],g[0],1100,740));
+      upgradePhotos(lp);
       document.getElementById('lb-glyph').textContent=g[1];
       document.getElementById('lb-cap').textContent=g[0];
       document.getElementById('lightbox').classList.add('open');
@@ -1030,6 +1032,9 @@
   lb.querySelector('.lb-bg').addEventListener('click',closeLb);
   document.getElementById('lb-close').addEventListener('click',closeLb);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeLb();closeModal();}});
+
+  /* ---- upgrade every embedded image to a real web photo when it loads ---- */
+  upgradePhotos(document);
 
   /* ---- CTA particles (subtle, capped) ---- */
   if(!reduce){
