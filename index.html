@@ -840,13 +840,23 @@
       +"</svg>";
     return "data:image/svg+xml,"+encodeURIComponent(svg);
   }
-  function imgTag(icon,seed,alt){
-    return "<img class='pimg' alt='"+(alt||'').replace(/'/g,'')+"' src=\""+scene(icon,seed)+"\" onload=\"this.classList.add('loaded')\">";
+  // Real web photos (LoremFlickr → real Flickr gym imagery, keyword-based,
+  // stable via ?lock). If a photo fails to load, fall back to embedded SVG art.
+  window.__imgFallback=function(img){img.onerror=null;
+    img.src=scene(img.getAttribute('data-ic')||'dumbbell',+(img.getAttribute('data-seed')||1));
+    img.classList.add('loaded');};
+  function photoUrl(kw,seed,w,h){return 'https://loremflickr.com/'+(w||700)+'/'+(h||500)+'/'+kw+'?lock='+seed;}
+  function imgTag(kw,seed,icon,alt,w,h){
+    return "<img class='pimg' alt='"+(alt||'').replace(/'/g,'')+"' data-ic='"+icon+"' data-seed='"+seed+
+      "' src='"+photoUrl(kw,seed,w,h)+"' onload=\"this.classList.add('loaded')\" onerror=\"window.__imgFallback(this)\">";
   }
-  function setScene(id,icon,seed){var el=document.getElementById(id);if(!el)return;
-    el.addEventListener('load',function(){el.classList.add('loaded');});el.src=scene(icon,seed);}
-  setScene('hero-img','barbell',11);
-  setScene('about-img-el','rack',22);
+  function setPhoto(id,kw,seed,icon,w,h){var el=document.getElementById(id);if(!el)return;
+    el.setAttribute('data-ic',icon);el.setAttribute('data-seed',seed);
+    el.addEventListener('load',function(){el.classList.add('loaded');});
+    el.addEventListener('error',function(){window.__imgFallback(el);});
+    el.src=photoUrl(kw,seed,w,h);}
+  setPhoto('hero-img','gym,fitness,workout,dark',11,'barbell',1600,900);
+  setPhoto('about-img-el','gym,interior,fitness',22,'rack',900,1100);
 
   /* ---- loader ---- */
   function finishLoad(){var l=document.getElementById('loader');l.classList.add('done');document.body.classList.add('ready');}
@@ -855,55 +865,56 @@
 
   /* ---- data ---- */
   var programs=[
-    ["Strength Training","Build strength, power and confidence with structured, progressive training.","🏋","Strength","barbell",31],
-    ["Personal Training","One-on-one coaching designed entirely around your individual goals.","🎯","1-on-1","target",32],
-    ["Weight Management","Structured workouts and guidance to help you build sustainable habits.","🔥","Cardio","pulse",33],
-    ["Functional Training","Improve mobility, endurance, strength and everyday performance.","🤸","Mobility","kettlebell",34],
-    ["Group Classes","High-energy sessions designed to keep you motivated and consistent.","👥","Classes","group",35],
-    ["Beginner Program","A guided, welcoming starting point for people new to the gym.","🌱","Beginner","arrow",36]
+    ["Strength Training","Build strength, power and confidence with structured, progressive training.","🏋","Strength","gym,weightlifting,barbell",31,"barbell"],
+    ["Personal Training","One-on-one coaching designed entirely around your individual goals.","🎯","1-on-1","personal,trainer,gym",32,"target"],
+    ["Weight Management","Structured workouts and guidance to help you build sustainable habits.","🔥","Cardio","treadmill,cardio,running",33,"pulse"],
+    ["Functional Training","Improve mobility, endurance, strength and everyday performance.","🤸","Mobility","kettlebell,crossfit,workout",34,"kettlebell"],
+    ["Group Classes","High-energy sessions designed to keep you motivated and consistent.","👥","Classes","fitness,class,group",35,"group"],
+    ["Beginner Program","A guided, welcoming starting point for people new to the gym.","🌱","Beginner","gym,fitness,stretching",36,"arrow"]
   ];
   var pg=document.getElementById('programs-grid');
   programs.forEach(function(p,i){
     var el=document.createElement('article');el.className='pcard reveal';el.setAttribute('data-stagger','');el.style.setProperty('--d',(i%3*90)+'ms');
     el.setAttribute('data-tilt','');
-    el.innerHTML='<div class="top"><div class="photo"><span class="pglyph">'+p[2]+'</span>'+imgTag(p[4],p[5],p[0])+'</div><span class="ic">'+p[2]+'</span></div>'+
+    el.innerHTML='<div class="top"><div class="photo"><span class="pglyph">'+p[2]+'</span>'+imgTag(p[4],p[5],p[6],p[0],700,440)+'</div><span class="ic">'+p[2]+'</span></div>'+
       '<div class="body"><h3>'+p[0]+'</h3><p>'+p[1]+'</p><a class="learn" href="#" data-trial>Learn More <span class="arrow">→</span></a></div>';
     pg.appendChild(el);
   });
 
   var trainers=[
-    ["Arjun Sharma","Head Strength Coach","8+ Years Experience","AS","barbell",41],
-    ["Priya Menon","Personal Trainer","6+ Years Experience","PM","dumbbell",42],
-    ["Rahul Verma","Functional Training Coach","7+ Years Experience","RV","kettlebell",43]
+    ["Arjun Sharma","Head Strength Coach","8+ Years Experience","AS","fitness,trainer,man,muscular",41,"barbell"],
+    ["Priya Menon","Personal Trainer","6+ Years Experience","PM","fitness,trainer,woman",42,"dumbbell"],
+    ["Rahul Verma","Functional Training Coach","7+ Years Experience","RV","gym,athlete,man",43,"kettlebell"]
   ];
   var tg=document.getElementById('trainers-grid');
   trainers.forEach(function(t,i){
     var el=document.createElement('article');el.className='tcard reveal';el.setAttribute('data-stagger','');el.style.setProperty('--d',(i*110)+'ms');
-    el.innerHTML='<div class="pic"><div class="photo"><span class="pglyph">💪</span>'+imgTag(t[4],t[5],t[0])+'</div>'+
+    el.innerHTML='<div class="pic"><div class="photo"><span class="pglyph">💪</span>'+imgTag(t[4],t[5],t[6],t[0],800,800)+'</div>'+
       '<div class="socials"><a href="#" aria-label="Instagram">IG</a><a href="#" aria-label="Facebook">FB</a><a href="#" aria-label="YouTube">YT</a></div></div>'+
       '<div class="meta"><div class="nm">'+t[0]+'</div><div class="sp">'+t[1]+'</div><div class="ex">'+t[2]+'</div></div>';
     tg.appendChild(el);
   });
 
   var gallery=[
-    ["Weight Training","🏋","tall","barbell",51],
-    ["Cardio Zone","🚴","normal","pulse",52],
-    ["Group Classes","👥","wide","group",53],
-    ["Personal Training","🎯","normal","target",54],
-    ["Gym Interior","🏢","normal","rack",55],
-    ["Our Trainers","💪","tall","dumbbell",56],
-    ["Members Training","🔥","normal","pullup",57],
-    ["Functional Area","🤸","wide","kettlebell",58]
+    ["Weight Training","🏋","tall","gym,weights,barbell",51,"barbell"],
+    ["Cardio Zone","🚴","normal","treadmill,cardio,gym",52,"pulse"],
+    ["Group Classes","👥","wide","fitness,group,class",53,"group"],
+    ["Personal Training","🎯","normal","trainer,gym,coaching",54,"target"],
+    ["Gym Interior","🏢","normal","gym,interior,fitness",55,"rack"],
+    ["Our Trainers","💪","tall","gym,dumbbell,fitness",56,"dumbbell"],
+    ["Members Training","🔥","normal","gym,workout,people",57,"pullup"],
+    ["Functional Area","🤸","wide","kettlebell,crossfit,gym",58,"kettlebell"]
   ];
   var gg=document.getElementById('gallery-grid');
   gallery.forEach(function(g){
     var el=document.createElement('button');el.className='gcell reveal '+(g[2]==='tall'?'tall':g[2]==='wide'?'wide':'');
-    el.innerHTML='<div class="photo"><span class="pglyph">'+g[1]+'</span>'+imgTag(g[3],g[4],g[0])+'</div>'+
+    var w=g[2]==='wide'?760:560,h=g[2]==='tall'?760:460;
+    el.innerHTML='<div class="photo"><span class="pglyph">'+g[1]+'</span>'+imgTag(g[3],g[4],g[5],g[0],w,h)+'</div>'+
       '<span class="plus">+</span><div class="ov"><span>'+g[0]+'</span></div>';
     el.addEventListener('click',function(){
       var lp=document.getElementById('lb-photo');
       lp.querySelectorAll('img').forEach(function(x){x.remove();});
-      lp.insertAdjacentHTML('beforeend',imgTag(g[3],g[4],g[0]));
+      lp.insertAdjacentHTML('beforeend',imgTag(g[3],g[4],g[5],g[0],1100,740));
       document.getElementById('lb-glyph').textContent=g[1];
       document.getElementById('lb-cap').textContent=g[0];
       document.getElementById('lightbox').classList.add('open');
