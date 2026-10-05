@@ -533,9 +533,7 @@
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-bg"><div class="photo" data-parallax><span class="pglyph">🏋</span>
-    <img class="pimg" alt="Athlete training in a premium dark gym" fetchpriority="high"
-      src="https://image.pollinations.ai/prompt/wide%20cinematic%20photo%20of%20a%20dark%20premium%20gym%20interior%20at%20night%2C%20dramatic%20electric%20blue%20rim%20lighting%2C%20silhouette%20of%20muscular%20athlete%20training%20with%20barbell%2C%20moody%20atmospheric%20fog%2C%20high%20end%20fitness%20photography?width=1600&height=900&seed=11&nologo=true&model=flux"
-      onload="this.classList.add('loaded')" onerror="this.remove()"></div></div>
+    <img id="hero-img" class="pimg" alt="Athlete training in a premium dark gym"></div></div>
   <div class="hero-grid-lines"></div>
   <div class="hero-ov"></div>
 
@@ -580,9 +578,7 @@
     <div class="about-grid">
       <div class="about-img reveal-clip">
         <div class="photo" data-tilt><span class="pglyph">🏢</span>
-          <img class="pimg" loading="lazy" alt="Inside Ironcore Fitness"
-            src="https://image.pollinations.ai/prompt/modern%20luxury%20gym%20interior%20with%20rows%20of%20dumbbells%20and%20machines%2C%20dark%20charcoal%20walls%2C%20electric%20blue%20accent%20lighting%2C%20wide%20angle%20architectural%20photography%2C%20premium?width=900&height=1100&seed=22&nologo=true&model=flux"
-            onload="this.classList.add('loaded')" onerror="this.remove()">
+          <img id="about-img-el" class="pimg" alt="Inside Ironcore Fitness">
           <span class="ptag">Inside Ironcore</span></div>
         <div class="about-badge"><div class="n">5+ Yrs</div><div class="t">Transforming Lives</div></div>
       </div>
@@ -808,16 +804,49 @@
   var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
   var WA='https://wa.me/919000000000?text='+encodeURIComponent("Hi Ironcore Fitness! I'd like to know more about memberships and a free trial.");
 
-  // Builds a Pollinations image URL (free, no key) for a dark premium gym aesthetic.
-  function imgUrl(prompt,w,h,seed){
-    return 'https://image.pollinations.ai/prompt/'+encodeURIComponent(
-      'dark moody premium gym, cinematic, electric blue accent lighting, high-end fitness photography, '+prompt)
-      +'?width='+w+'&height='+h+'&seed='+seed+'&nologo=true&model=flux';
+  // ---- Self-contained SVG imagery (no network; renders everywhere) ----
+  var ICONS={
+    dumbbell:"<line x1='40' y1='100' x2='160' y2='100'/><line x1='40' y1='68' x2='40' y2='132'/><line x1='24' y1='80' x2='24' y2='120'/><line x1='160' y1='68' x2='160' y2='132'/><line x1='176' y1='80' x2='176' y2='120'/>",
+    barbell:"<line x1='8' y1='100' x2='192' y2='100'/><line x1='58' y1='64' x2='58' y2='136'/><line x1='42' y1='76' x2='42' y2='124'/><line x1='142' y1='64' x2='142' y2='136'/><line x1='158' y1='76' x2='158' y2='124'/>",
+    kettlebell:"<path d='M72 66 a28 22 0 0 1 56 0'/><path d='M66 80 C56 172 144 172 134 80'/>",
+    pulse:"<polyline points='16,110 66,110 90,60 116,154 142,90 162,110 192,110'/>",
+    rack:"<line x1='40' y1='38' x2='40' y2='168'/><line x1='80' y1='54' x2='80' y2='168'/><line x1='120' y1='54' x2='120' y2='168'/><line x1='160' y1='38' x2='160' y2='168'/><line x1='18' y1='168' x2='182' y2='168'/><circle cx='40' cy='60' r='9'/><circle cx='160' cy='60' r='9'/>",
+    group:"<circle cx='55' cy='72' r='15'/><path d='M31 128 a24 26 0 0 1 48 0'/><circle cx='100' cy='64' r='16'/><path d='M74 126 a26 28 0 0 1 52 0'/><circle cx='145' cy='72' r='15'/><path d='M121 128 a24 26 0 0 1 48 0'/>",
+    arrow:"<line x1='100' y1='168' x2='100' y2='52'/><polyline points='64,90 100,52 136,90'/>",
+    target:"<circle cx='100' cy='100' r='62'/><circle cx='100' cy='100' r='36'/><circle cx='100' cy='100' r='10' fill='#cfe0ff' stroke='none'/>",
+    pullup:"<line x1='28' y1='44' x2='172' y2='44'/><line x1='78' y1='44' x2='78' y2='86'/><line x1='122' y1='44' x2='122' y2='86'/><circle cx='100' cy='100' r='15'/><line x1='100' y1='115' x2='100' y2='150'/>"
+  };
+  function scene(icon,seed){
+    seed=seed||1;
+    var inner=ICONS[icon]||ICONS.dumbbell;
+    var gx=(0.55+((seed*17)%40)/100).toFixed(2), gy=(0.1+((seed*11)%30)/100).toFixed(2);
+    var streaks='';
+    for(var i=0;i<3;i++){var x=((seed*37+i*170)%900)-50;streaks+="<line x1='"+x+"' y1='-60' x2='"+(x-280)+"' y2='660'/>";}
+    var svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600' preserveAspectRatio='xMidYMid slice'>"
+      +"<defs>"
+      +"<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#111a2b'/><stop offset='0.55' stop-color='#0a0e17'/><stop offset='1' stop-color='#06080d'/></linearGradient>"
+      +"<radialGradient id='gl' cx='"+gx+"' cy='"+gy+"' r='0.85'><stop offset='0' stop-color='#2e7bff' stop-opacity='0.55'/><stop offset='0.5' stop-color='#2e7bff' stop-opacity='0.12'/><stop offset='1' stop-color='#2e7bff' stop-opacity='0'/></radialGradient>"
+      +"<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter>"
+      +"<filter id='b' x='-30%' y='-30%' width='160%' height='160%'><feGaussianBlur stdDeviation='7'/></filter>"
+      +"</defs>"
+      +"<rect width='800' height='600' fill='url(#g)'/>"
+      +"<rect width='800' height='600' fill='url(#gl)'/>"
+      +"<g stroke='#2e7bff' stroke-width='2' opacity='0.22'>"+streaks+"</g>"
+      +"<g transform='translate(300,200)' fill='none' stroke-linecap='round' stroke-linejoin='round'>"
+      +"<g filter='url(#b)' stroke='#2e7bff' stroke-width='11' opacity='0.85'>"+inner+"</g>"
+      +"<g stroke='#dbe8ff' stroke-width='8'>"+inner+"</g>"
+      +"</g>"
+      +"<rect width='800' height='600' filter='url(#n)' opacity='0.06'/>"
+      +"</svg>";
+    return "data:image/svg+xml,"+encodeURIComponent(svg);
   }
-  function imgTag(prompt,w,h,seed,alt){
-    return '<img class="pimg" loading="lazy" alt="'+(alt||'')+'" src="'+imgUrl(prompt,w,h,seed)+
-      '" onload="this.classList.add(\'loaded\')" onerror="this.remove()">';
+  function imgTag(icon,seed,alt){
+    return "<img class='pimg' alt='"+(alt||'').replace(/'/g,'')+"' src=\""+scene(icon,seed)+"\" onload=\"this.classList.add('loaded')\">";
   }
+  function setScene(id,icon,seed){var el=document.getElementById(id);if(!el)return;
+    el.addEventListener('load',function(){el.classList.add('loaded');});el.src=scene(icon,seed);}
+  setScene('hero-img','barbell',11);
+  setScene('about-img-el','rack',22);
 
   /* ---- loader ---- */
   function finishLoad(){var l=document.getElementById('loader');l.classList.add('done');document.body.classList.add('ready');}
@@ -826,56 +855,55 @@
 
   /* ---- data ---- */
   var programs=[
-    ["Strength Training","Build strength, power and confidence with structured, progressive training.","🏋","Strength","muscular athlete performing a heavy barbell deadlift",31],
-    ["Personal Training","One-on-one coaching designed entirely around your individual goals.","🎯","1-on-1","personal trainer coaching a client with dumbbells",32],
-    ["Weight Management","Structured workouts and guidance to help you build sustainable habits.","🔥","Cardio","person running on a treadmill, motion blur",33],
-    ["Functional Training","Improve mobility, endurance, strength and everyday performance.","🤸","Mobility","athlete swinging battle ropes, sweat, intense",34],
-    ["Group Classes","High-energy sessions designed to keep you motivated and consistent.","👥","Classes","high energy group fitness class in a studio",35],
-    ["Beginner Program","A guided, welcoming starting point for people new to the gym.","🌱","Beginner","person stretching and warming up in a clean gym",36]
+    ["Strength Training","Build strength, power and confidence with structured, progressive training.","🏋","Strength","barbell",31],
+    ["Personal Training","One-on-one coaching designed entirely around your individual goals.","🎯","1-on-1","target",32],
+    ["Weight Management","Structured workouts and guidance to help you build sustainable habits.","🔥","Cardio","pulse",33],
+    ["Functional Training","Improve mobility, endurance, strength and everyday performance.","🤸","Mobility","kettlebell",34],
+    ["Group Classes","High-energy sessions designed to keep you motivated and consistent.","👥","Classes","group",35],
+    ["Beginner Program","A guided, welcoming starting point for people new to the gym.","🌱","Beginner","arrow",36]
   ];
   var pg=document.getElementById('programs-grid');
   programs.forEach(function(p,i){
     var el=document.createElement('article');el.className='pcard reveal';el.setAttribute('data-stagger','');el.style.setProperty('--d',(i%3*90)+'ms');
     el.setAttribute('data-tilt','');
-    el.innerHTML='<div class="top"><div class="photo"><span class="pglyph">'+p[2]+'</span>'+imgTag(p[4],700,440,p[5],p[0])+'</div><span class="ic">'+p[2]+'</span></div>'+
+    el.innerHTML='<div class="top"><div class="photo"><span class="pglyph">'+p[2]+'</span>'+imgTag(p[4],p[5],p[0])+'</div><span class="ic">'+p[2]+'</span></div>'+
       '<div class="body"><h3>'+p[0]+'</h3><p>'+p[1]+'</p><a class="learn" href="#" data-trial>Learn More <span class="arrow">→</span></a></div>';
     pg.appendChild(el);
   });
 
   var trainers=[
-    ["Arjun Sharma","Head Strength Coach","8+ Years Experience","AS","strong male strength coach spotting a barbell, athletic physique, back view",41],
-    ["Priya Menon","Personal Trainer","6+ Years Experience","PM","athletic female personal trainer holding a dumbbell in a gym",42],
-    ["Rahul Verma","Functional Training Coach","7+ Years Experience","RV","male functional training coach with a kettlebell, athletic, action shot",43]
+    ["Arjun Sharma","Head Strength Coach","8+ Years Experience","AS","barbell",41],
+    ["Priya Menon","Personal Trainer","6+ Years Experience","PM","dumbbell",42],
+    ["Rahul Verma","Functional Training Coach","7+ Years Experience","RV","kettlebell",43]
   ];
   var tg=document.getElementById('trainers-grid');
   trainers.forEach(function(t,i){
     var el=document.createElement('article');el.className='tcard reveal';el.setAttribute('data-stagger','');el.style.setProperty('--d',(i*110)+'ms');
-    el.innerHTML='<div class="pic"><div class="photo"><span class="pglyph">💪</span>'+imgTag(t[4],800,800,t[5],t[0])+'</div>'+
+    el.innerHTML='<div class="pic"><div class="photo"><span class="pglyph">💪</span>'+imgTag(t[4],t[5],t[0])+'</div>'+
       '<div class="socials"><a href="#" aria-label="Instagram">IG</a><a href="#" aria-label="Facebook">FB</a><a href="#" aria-label="YouTube">YT</a></div></div>'+
       '<div class="meta"><div class="nm">'+t[0]+'</div><div class="sp">'+t[1]+'</div><div class="ex">'+t[2]+'</div></div>';
     tg.appendChild(el);
   });
 
   var gallery=[
-    ["Weight Training","🏋","tall","athlete lifting heavy weights at a squat rack",51],
-    ["Cardio Zone","🚴","normal","row of treadmills and cardio machines glowing",52],
-    ["Group Classes","👥","wide","group HIIT class mid workout, energetic",53],
-    ["Personal Training","🎯","normal","trainer guiding a client through an exercise",54],
-    ["Gym Interior","🏢","normal","wide shot of a stylish dark gym interior",55],
-    ["Our Trainers","💪","tall","fit coach standing with arms crossed, silhouette",56],
-    ["Members Training","🔥","normal","person doing pull ups, determined, intense",57],
-    ["Functional Area","🤸","wide","functional training area with kettlebells and ropes",58]
+    ["Weight Training","🏋","tall","barbell",51],
+    ["Cardio Zone","🚴","normal","pulse",52],
+    ["Group Classes","👥","wide","group",53],
+    ["Personal Training","🎯","normal","target",54],
+    ["Gym Interior","🏢","normal","rack",55],
+    ["Our Trainers","💪","tall","dumbbell",56],
+    ["Members Training","🔥","normal","pullup",57],
+    ["Functional Area","🤸","wide","kettlebell",58]
   ];
   var gg=document.getElementById('gallery-grid');
   gallery.forEach(function(g){
     var el=document.createElement('button');el.className='gcell reveal '+(g[2]==='tall'?'tall':g[2]==='wide'?'wide':'');
-    var w=g[2]==='wide'?760:560,h=g[2]==='tall'?760:420;
-    el.innerHTML='<div class="photo"><span class="pglyph">'+g[1]+'</span>'+imgTag(g[3],w,h,g[4],g[0])+'</div>'+
+    el.innerHTML='<div class="photo"><span class="pglyph">'+g[1]+'</span>'+imgTag(g[3],g[4],g[0])+'</div>'+
       '<span class="plus">+</span><div class="ov"><span>'+g[0]+'</span></div>';
     el.addEventListener('click',function(){
       var lp=document.getElementById('lb-photo');
       lp.querySelectorAll('img').forEach(function(x){x.remove();});
-      lp.insertAdjacentHTML('beforeend',imgTag(g[3],1100,740,g[4],g[0]));
+      lp.insertAdjacentHTML('beforeend',imgTag(g[3],g[4],g[0]));
       document.getElementById('lb-glyph').textContent=g[1];
       document.getElementById('lb-cap').textContent=g[0];
       document.getElementById('lightbox').classList.add('open');
